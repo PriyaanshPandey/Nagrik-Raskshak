@@ -1,37 +1,94 @@
-
 const express = require("express");
 const cors = require("cors");
 const admin = require("firebase-admin");
 const multer = require("multer");
 const fetch = require("node-fetch");
+const path = require("path");
 
-const serviceAccount = require("./serviceAccountKey.json");
+// Load environment variables
+require('dotenv').config();
 
+// Initialize Firebase with environment variables
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
+  })
 });
-// admin.initializeApp({
-//   credential: admin.credential.cert({
-//     projectId: process.env.PROJECT_ID,
-//     clientEmail: process.env.CLIENT_EMAIL,
-//     privateKey: process.env.PRIVATE_KEY.replace(/\\n/g, "\n")
-//   })
-// });
-
-
 
 const db = admin.firestore();
 
 const app = express();
-app.use(cors());
-app.use(express.json());
 
-// Image upload setup
-const upload = multer({ dest: "uploads/" });
-app.use("/uploads", express.static("uploads"));
+// CORS configuration for production
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5500',
+  'http://127.0.0.1:5500',
+  'https://your-netlify-site.netlify.app', // Will update after Netlify deployment
+  'https://nagrik-backend.onrender.com'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Content-Length', 'X-Requested-With']
+}));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Configure multer for file uploads (memory storage for production)
+const storage = multer.memoryStorage(); // Store files in memory instead of disk
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+});
+
+// Health check endpoint (required for Render)
+app.get("/health", (req, res) => {
+  res.json({ 
+    status: "healthy", 
+    service: "Nagrik Rakshak API",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// API info endpoint
+app.get("/api", (req, res) => {
+  res.json({
+    name: "Nagrik Rakshak API",
+    version: "1.0.0",
+    endpoints: {
+      auth: ["/register", "/login"],
+      complaints: ["/submit-complaint", "/complaints", "/my-complaints"],
+      bot: ["/bot-query", "/bot-check-status"],
+      admin: ["/update-complaint-status"],
+      system: ["/health"]
+    }
+  });
+});
 
 app.get("/", (req, res) => {
-  res.send("Backend is running 🚀");
+  res.json({
+    message: "Nagrik Rakshak Backend is running 🚀",
+    docs: "Visit /api for API documentation",
+    health: "Visit /health for service status"
+  });
 });
 
 /**
@@ -70,8 +127,12 @@ app.post("/register", async (req, res) => {
       },
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Register failed" });
+    console.error("Registration error:", err);
+    res.status(500).json({ 
+      success: false, 
+      message: "Register failed",
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 
@@ -82,6 +143,10 @@ app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: "Email and password required" });
+    }
+
     const snapshot = await db
       .collection("users")
       .where("email", "==", email)
@@ -89,21 +154,32 @@ app.post("/login", async (req, res) => {
       .get();
 
     if (snapshot.empty) {
-      return res.json({ success: false });
+      return res.json({ 
+        success: false,
+        message: "Invalid email or password"
+      });
     }
 
     const userDoc = snapshot.docs[0];
+    const userData = userDoc.data();
+
+    // Remove password from response for security
+    delete userData.password;
 
     res.json({
       success: true,
       user: {
         id: userDoc.id,
-        ...userDoc.data(),
+        ...userData,
       },
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false });
+    console.error("Login error:", err);
+    res.status(500).json({ 
+      success: false,
+      message: "Login failed",
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 
@@ -122,14 +198,24 @@ app.post("/submit-complaint", upload.any(), async (req, res) => {
       lng
     } = req.body;
 
-    if (!userId || !userName) {
-      return res.status(401).json({ error: "Unauthorized" });
+    if (!userId || !userName || !description) {
+      return res.status(400).json({ 
+        error: "Missing required fields",
+        required: ["userId", "userName", "description"]
+      });
     }
 
-    const imagePath =
-      req.files && req.files.length > 0
-        ? req.files[0].path
-        : null;
+    let imageName = null;
+    let hasImage = false;
+    
+    if (req.files && req.files.length > 0) {
+      const file = req.files[0];
+      imageName = file.originalname;
+      hasImage = true;
+      
+      // Note: In production, you might want to upload to Firebase Storage
+      // For now, we're only storing the file name since free tiers have limited storage
+    }
 
     let location = null;
     let address = "Location not provided";
@@ -140,66 +226,69 @@ app.post("/submit-complaint", upload.any(), async (req, res) => {
         parseFloat(lng)
       );
 
-      const geoUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+      try {
+        const geoUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
 
-      const geoResponse = await fetch(geoUrl, {
-        headers: {
-          "User-Agent": "NagrikRakshak/1.0 (contact: shikhar0538@gmail.com)",
-        },
-      });
+        const geoResponse = await fetch(geoUrl, {
+          headers: {
+            "User-Agent": "NagrikRakshak/1.0 (contact: shikhar0538@gmail.com)",
+          },
+        });
 
-      if (geoResponse.ok) {
-        const geoData = await geoResponse.json();
-        if (geoData?.display_name) {
-          address = geoData.display_name
-            .split(", ")
-            .slice(0, 3)
-            .join(", ");
+        if (geoResponse.ok) {
+          const geoData = await geoResponse.json();
+          if (geoData?.display_name) {
+            address = geoData.display_name
+              .split(", ")
+              .slice(0, 3)
+              .join(", ");
+          }
         }
+      } catch (geoError) {
+        console.warn("Geocoding failed:", geoError.message);
+        address = "Location provided but address lookup failed";
       }
     }
 
-    // In the SUBMIT COMPLAINT section of server.js, find this part:
-await db.collection("complaints").add({
-  userId,
-  userName,
-  mobile,
-  description,
-  location,
-  address,
-  imagePath,
-  department: null,
-  priority: null,
-  status: "new",
-  createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  clientCreatedAt: new Date().toISOString(),
-  // NEW: Action tracking fields
-  actions: [{
-    action: "Complaint Submitted",
-    timestamp: new Date().toISOString(), // CHANGED FROM FieldValue
-    by: userName
-  }],
-  deadline: null,
-  overdue: false,
-  lastUpdated: new Date().toISOString() // CHANGED FROM FieldValue
-});
+    const complaintData = {
+      userId,
+      userName,
+      mobile: mobile || "Not provided",
+      description,
+      location,
+      address,
+      imageName,
+      hasImage,
+      department: null,
+      priority: null,
+      status: "new",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      clientCreatedAt: new Date().toISOString(),
+      actions: [{
+        action: "Complaint Submitted",
+        timestamp: new Date().toISOString(),
+        by: userName
+      }],
+      deadline: null,
+      overdue: false,
+      lastUpdated: new Date().toISOString()
+    };
 
-    res.json({ success: true, message: "Complaint saved successfully" });
+    await db.collection("complaints").add(complaintData);
+
+    res.json({ 
+      success: true, 
+      message: "Complaint saved successfully",
+      complaintId: complaintData.id
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to save complaint" });
+    console.error("Submit complaint error:", err);
+    res.status(500).json({ 
+      error: "Failed to save complaint",
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
-
-/**
- * UPDATE COMPLAINT STATUS
- */
-
-/**
- * UPDATE COMPLAINT STATUS
- */
-
-// ... (keep all existing code above the update endpoint)
 
 /**
  * UPDATE COMPLAINT STATUS
@@ -236,15 +325,19 @@ app.post("/update-complaint-status", async (req, res) => {
       lastUpdated: new Date().toISOString()
     });
 
-    res.json({ success: true, message: `Status updated to ${status}` });
+    res.json({ 
+      success: true, 
+      message: `Status updated to ${status}`,
+      complaintId: complaintId
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Update failed: " + err.message });
+    console.error("Update status error:", err);
+    res.status(500).json({ 
+      success: false, 
+      message: "Update failed: " + err.message 
+    });
   }
 });
-
-// ... (keep all existing code below)
-
 
 /**
  * ADMIN – ALL COMPLAINTS
@@ -299,9 +392,17 @@ app.get("/complaints", async (req, res) => {
       };
     });
 
-    res.json(complaints);
+    res.json({
+      success: true,
+      count: complaints.length,
+      complaints: complaints
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Get all complaints error:", err);
+    res.status(500).json({ 
+      success: false,
+      error: err.message 
+    });
   }
 });
 
@@ -311,7 +412,10 @@ app.get("/complaints", async (req, res) => {
 app.get("/my-complaints", async (req, res) => {
   try {
     const { userId } = req.query;
-    if (!userId) return res.status(400).json({ error: "Missing userId" });
+    if (!userId) return res.status(400).json({ 
+      success: false,
+      error: "Missing userId" 
+    });
 
     const complaintsRef = db.collection("complaints");
 
@@ -326,52 +430,56 @@ app.get("/my-complaints", async (req, res) => {
       snapshot = await complaintsRef.where("userId", "==", userId).get();
     }
 
-    // In the MY COMPLAINTS endpoint, update the complaints mapping:
-const complaints = snapshot.docs.map(doc => {
-  const data = doc.data();
-  
-  // Handle timestamp conversion
-  let createdAt = new Date();
-  if (data.createdAt) {
-    if (data.createdAt.toDate) {
-      createdAt = data.createdAt.toDate();
-    } else if (typeof data.createdAt === 'string') {
-      createdAt = new Date(data.createdAt);
-    }
-  }
-  
-  // Handle actions timestamps
-  const actions = data.actions || [];
-  const processedActions = actions.map(action => ({
-    ...action,
-    timestamp: action.timestamp ? new Date(action.timestamp) : new Date()
-  }));
+    const complaints = snapshot.docs.map(doc => {
+      const data = doc.data();
+      
+      // Handle timestamp conversion
+      let createdAt = new Date();
+      if (data.createdAt) {
+        if (data.createdAt.toDate) {
+          createdAt = data.createdAt.toDate();
+        } else if (typeof data.createdAt === 'string') {
+          createdAt = new Date(data.createdAt);
+        }
+      }
+      
+      // Handle actions timestamps
+      const actions = data.actions || [];
+      const processedActions = actions.map(action => ({
+        ...action,
+        timestamp: action.timestamp ? new Date(action.timestamp) : new Date()
+      }));
 
-  return {
-    id: doc.id,
-    description: data.description || "",
-    status: data.status || "Pending",
-    address: data.address || "",
-    imagePath: data.imagePath || "",
-    createdAt: createdAt,
-    actions: processedActions,
-    priority: data.priority || "Low"
-  };
-});
+      return {
+        id: doc.id,
+        description: data.description || "",
+        status: data.status || "Pending",
+        address: data.address || "",
+        imageName: data.imageName || "",
+        hasImage: data.hasImage || false,
+        createdAt: createdAt,
+        actions: processedActions,
+        priority: data.priority || "Low"
+      };
+    });
 
-    res.json(complaints);
+    res.json({
+      success: true,
+      userId: userId,
+      count: complaints.length,
+      complaints: complaints
+    });
   } catch (err) {
-    console.error("Fetch complaints failed:", err);
-    res.status(500).json({ error: "Failed to fetch complaints", details: err.message });
+    console.error("Fetch user complaints failed:", err);
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to fetch complaints",
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 
-/**
- * BOT QUERY ENDPOINT
- */
-
-// Add this FAQ array to your server.js file (usually near the bot-query endpoint)
-
+// FAQ array for bot responses
 const FAQS = [
   // 📝 Filing complaints
   {
@@ -577,7 +685,9 @@ const FAQS = [
   }
 ];
 
-
+/**
+ * BOT QUERY ENDPOINT
+ */
 app.post("/bot-query", (req, res) => {
   const { message } = req.body;
 
@@ -625,13 +735,6 @@ app.post("/bot-query", (req, res) => {
   const reply = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
   res.json({ reply });
 });
-
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
-});
-
-
-// Add this near your other endpoints, after /bot-query
 
 /**
  * BOT - CHECK COMPLAINT STATUS
@@ -778,3 +881,31 @@ app.post("/bot-check-status", async (req, res) => {
   }
 });
 
+// 404 handler for undefined routes
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+    path: req.path,
+    method: req.method
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Server error:", err);
+  res.status(500).json({
+    success: false,
+    message: "Internal server error",
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  console.log(`📚 API docs: http://localhost:${PORT}/api`);
+});
