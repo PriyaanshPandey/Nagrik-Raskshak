@@ -1,0 +1,5 @@
+Flask==2.3.3
+Flask-CORS==4.0.0
+gunicorn==21.2.0
+google-cloud-firestore==2.13.0
+google-auth==2.23.4
