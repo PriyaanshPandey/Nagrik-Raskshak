@@ -1,0 +1,3 @@
+# This prevents Jekyll from processing your files
+touch frontend/.nojekyll
+echo "" > frontend/.nojekyll
