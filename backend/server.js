@@ -9,15 +9,149 @@ const fetch = require("node-fetch");  // Added for AI calls
 require('dotenv').config();
 
 // Initialize Firebase with environment variables
-admin.initializeApp({
-  credential: admin.credential.cert({
-    projectId: process.env.FIREBASE_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
-  })
-});
+// ============ FIXED FIREBASE INITIALIZATION ============
+console.log("🔄 Initializing Firebase Admin SDK...");
+
+// Debug: Show what environment variables are available
+console.log("🔍 Checking environment variables:");
+console.log("   FIREBASE_PROJECT_ID:", process.env.FIREBASE_PROJECT_ID ? "✅ Set" : "❌ Missing");
+console.log("   FIREBASE_CLIENT_EMAIL:", process.env.FIREBASE_CLIENT_EMAIL ? "✅ Set" : "❌ Missing");
+console.log("   FIREBASE_PRIVATE_KEY:", process.env.FIREBASE_PRIVATE_KEY ? `✅ Set (${process.env.FIREBASE_PRIVATE_KEY.length} chars)` : "❌ Missing");
+
+// FIX: Properly format the private key from Render environment variable
+let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
+
+// CRITICAL FIX: Render stores newlines as literal \n characters, need to convert to actual newlines
+if (privateKey && privateKey.includes('\\n')) {
+  console.log("🔧 Converting escaped newlines (\\n) to actual newlines...");
+  privateKey = privateKey.replace(/\\n/g, '\n');
+}
+
+// Validate the key format
+if (!privateKey.startsWith('-----BEGIN PRIVATE KEY-----')) {
+  console.error("❌ ERROR: Private key doesn't start with correct header");
+  console.error("First 50 chars:", privateKey.substring(0, 50));
+} else {
+  console.log("✅ Private key format looks correct");
+}
+
+try {
+  // Create complete service account configuration
+  const serviceAccount = {
+    type: "service_account",
+    project_id: process.env.FIREBASE_PROJECT_ID,
+    private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID || "not-required", // This can be auto-generated
+    private_key: privateKey,
+    client_email: process.env.FIREBASE_CLIENT_EMAIL,
+    client_id: process.env.FIREBASE_CLIENT_ID || "not-required", // This can be auto-generated
+    auth_uri: "https://accounts.google.com/o/oauth2/auth",
+    token_uri: "https://oauth2.googleapis.com/token",
+    auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+    client_x509_cert_url: process.env.FIREBASE_CLIENT_CERT_URL || 
+      `https://www.googleapis.com/robot/v1/metadata/x509/${encodeURIComponent(process.env.FIREBASE_CLIENT_EMAIL)}`,
+    universe_domain: "googleapis.com"
+  };
+
+  console.log("📧 Service Account Email:", serviceAccount.client_email);
+  console.log("🏢 Project ID:", serviceAccount.project_id);
+
+  // Initialize Firebase Admin SDK
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    projectId: serviceAccount.project_id
+  });
+  
+  console.log("✅ Firebase Admin SDK initialized successfully!");
+  
+} catch (error) {
+  console.error("❌ CRITICAL: Firebase initialization failed!");
+  console.error("Error:", error.message);
+  console.error("Stack:", error.stack);
+  console.log("⚠️ Application will continue but database operations will fail");
+}
 
 const db = admin.firestore();
+console.log("✅ Firestore instance created");
+
+// Test the connection on startup
+if (db) {
+  db.collection("health_check").doc("server_start").set({
+    timestamp: new Date().toISOString(),
+    status: "backend_started",
+    environment: process.env.NODE_ENV || 'development'
+  })
+  .then(() => console.log("✅ Firebase connection test: PASSED"))
+  .catch(err => console.error("❌ Firebase connection test: FAILED -", err.message));
+}
+// ============ FIREBASE DEBUG ENDPOINT ============
+app.get("/test-firebase", async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({
+        success: false,
+        error: "Firebase not initialized",
+        message: "Firebase Admin SDK failed to initialize"
+      });
+    }
+
+    // Test 1: Write to Firestore
+    const testRef = db.collection("connection_tests").doc("render_test");
+    await testRef.set({
+      test: true,
+      timestamp: new Date().toISOString(),
+      server: "render_backend",
+      environment: process.env.NODE_ENV
+    });
+    
+    // Test 2: Read from Firestore
+    const doc = await testRef.get();
+    const data = doc.data();
+    
+    // Test 3: Count complaints
+    const complaintsSnapshot = await db.collection("complaints").limit(1).get();
+    
+    res.json({
+      success: true,
+      message: "✅ Firebase connection successful!",
+      tests: {
+        write: "PASSED",
+        read: "PASSED",
+        collection_access: complaintsSnapshot.empty ? "NO_DATA" : "PASSED"
+      },
+      data: {
+        test_document: data,
+        complaints_count: complaintsSnapshot.size,
+        sample_complaint: complaintsSnapshot.empty ? null : {
+          id: complaintsSnapshot.docs[0].id,
+          ...complaintsSnapshot.docs[0].data()
+        }
+      },
+      firebase_config: {
+        project_id: process.env.FIREBASE_PROJECT_ID,
+        client_email: process.env.FIREBASE_CLIENT_EMAIL,
+        private_key_length: process.env.FIREBASE_PRIVATE_KEY?.length || 0,
+        environment: process.env.NODE_ENV || 'development'
+      }
+    });
+    
+  } catch (error) {
+    console.error("Firebase test error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      error_code: error.code,
+      error_details: error.details,
+      firebase_info: {
+        project_id: process.env.FIREBASE_PROJECT_ID,
+        client_email: process.env.FIREBASE_CLIENT_EMAIL,
+        private_key_preview: process.env.FIREBASE_PRIVATE_KEY ? 
+          process.env.FIREBASE_PRIVATE_KEY.substring(0, 100) + "..." : 
+          "MISSING"
+      },
+      fix_suggestion: "Check if FIREBASE_PRIVATE_KEY has actual newlines, not \\n characters"
+    });
+  }
+});
 
 // AI Service URL - FIXED: Use your actual AI service
 const AI_SERVICE_URL = 'https://nagrik-raskshak-1.onrender.com';
@@ -798,3 +932,4 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🤖 AI Health check: http://localhost:${PORT}/api/ai-health`);
   console.log(`📚 API docs: http://localhost:${PORT}/api`);
 });
+
