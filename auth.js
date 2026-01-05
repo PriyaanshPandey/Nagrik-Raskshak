@@ -30,6 +30,7 @@ function openSignup() {
 }
 
 /* ================= PAGE LOAD ================= */
+const API_BASE = window.APP_CONFIG.apiUrl;
 
 window.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
@@ -60,7 +61,7 @@ async function register() {
     return;
   }
 
-  const res = await fetch("http://localhost:3000/register", {
+  const res = await fetch(`${API_BASE}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, email, password })
@@ -87,7 +88,7 @@ async function login() {
     return;
   }
 
-  const res = await fetch("http://localhost:3000/login", {
+  const res = await fetch(`${API_BASE}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password })
@@ -102,3 +103,4 @@ async function login() {
     alert("Invalid login");
   }
 }
+
