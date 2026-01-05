@@ -15,7 +15,7 @@ if (!localStorage.getItem("user")) {
 // ===== CONFIGURATION =====
 // BACKEND URLS - Configure these based on your Render services
 const BACKEND_URL = 'https://nagrik-raskshak-f8t1.onrender.com'; // Your Node backend
-const AI_SERVICE_URL = 'https://nagrik-raskshak-1.onrender.com'; // Your AI service (currently 503)
+const AI_SERVICE_URL = 'https://nagrik-raskshak-f8t1.onrender.com/api/ai-analyze'; // FIXED: Use backend AI endpoint
 
 // Get user from localStorage
 const user = JSON.parse(localStorage.getItem("user"));
@@ -404,24 +404,50 @@ async function checkComplaintStatus(userId, message) {
 
 async function fetchRegularBotResponse(text) {
   try {
-    const response = await fetch(`${AI_SERVICE_URL}/bot-query`, {
+    console.log("🤖 AI analyzing:", text);
+    
+    const response = await fetch(`${AI_SERVICE_URL}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
+      body: JSON.stringify({ complaint: text })
     });
     
-    // Handle AI service downtime
+    // Handle response
     if (!response.ok) {
+      console.warn("AI service returned:", response.status);
       return {
-        reply: "The AI assistant is temporarily unavailable. Please check your complaint status using the 'My Past Complaints' section below, or try again later."
+        reply: "I can help you analyze complaints. Try describing a problem like 'water leak' or 'power cut'."
       };
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log("AI response:", data);
+    
+    // Format AI response for bot
+    if (data.success && data.analysis) {
+      const analysis = data.analysis.analysis || data.analysis;
+      return {
+        reply: `🔍 **Analysis Complete**
+        
+Based on your complaint: "${text.substring(0, 50)}..."
+
+**Department:** ${analysis.department || 'Municipality'} (${analysis.department_confidence || '60'}% confidence)
+**Priority:** ${analysis.priority || 'Medium'}
+**Urgency:** ${analysis.urgency || 'Normal'}
+**Action:** ${analysis.recommended_action || 'Submit complaint using form above'}
+
+You can submit this complaint using the form above!`
+      };
+    } else {
+      return {
+        reply: "I analyzed your complaint. You can submit it using the form above."
+      };
+    }
+    
   } catch (error) {
-    console.error("Bot query failed:", error);
+    console.error("AI query failed:", error);
     return {
-      reply: "I'm having trouble connecting to the help system. You can check your complaints below or try again later."
+      reply: "I'm here to help with your complaints! Use the form above to submit new ones."
     };
   }
 }
