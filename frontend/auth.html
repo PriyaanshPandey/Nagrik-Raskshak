@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <title>Login Page</title>
     <link rel="stylesheet" href="auth.css" />
+    <!-- ADD BASE PATH FOR CORRECT PATHS -->
+    <base href="./">
   </head>
 
   <body
@@ -12,7 +14,7 @@
           rgba(0, 0, 0, 0.65),
           rgba(0, 0, 0, 0.65)
         ),
-        url('loback (1).jpg');
+        url('images/loback (1).jpg');
       backdrop-filter: blur(6px);
     "
   >
@@ -25,11 +27,14 @@
 
         <div class="right-panel">
           <!-- SIGNUP -->
-          <div class="content signup" id="signup">
+          <div class="content signup active" id="signup">
             <h2>Register To The Portal</h2>
-            <input id="su-name" type="text" placeholder="Username" />
-            <input id="su-email" type="email" placeholder="Email" />
-            <input id="su-password" type="password" placeholder="Password" />
+            <input id="su-name" type="text" placeholder="Full Name" required />
+            <input id="su-email" type="email" placeholder="Email" required />
+            <input id="su-password" type="password" placeholder="Password (min 6 chars)" required />
+            <!-- ADD THIS MOBILE FIELD -->
+            <input id="su-mobile" type="tel" placeholder="Mobile Number (10 digits)" 
+                   pattern="[0-9]{10}" maxlength="10" required />
             <button type="button" onclick="register()">Register</button>
             <p class="switch" onclick="switchPanel()">
               Already have an account? Login
@@ -39,8 +44,8 @@
           <!-- LOGIN -->
           <div class="content login" id="login">
             <h2>System Login</h2>
-            <input id="li-email" type="email" placeholder="Enter Registered Email" />
-            <input id="li-password" type="password" placeholder="Enter Password" />
+            <input id="li-email" type="email" placeholder="Enter Registered Email" required />
+            <input id="li-password" type="password" placeholder="Enter Password" required />
             <button type="button" onclick="login()">Login</button>
             <p class="switch" onclick="switchPanel()">
               Create new account
@@ -50,10 +55,26 @@
       </div>
     </div>
 
-    <!-- ✅ LOAD JS AFTER DOM -->
-    <script src="auth.js" defer></script>
+    <!-- ✅ LOAD JS IN CORRECT ORDER -->
     <script src="config.js"></script>
-
+    <script src="auth.js"></script>
+    <script>
+      // Initialize based on URL parameter
+      window.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get('mode');
+        
+        const signup = document.getElementById('signup');
+        const login = document.getElementById('login');
+        
+        if (mode === 'login') {
+          signup.classList.remove('active');
+          login.classList.add('active');
+        } else {
+          signup.classList.add('active');
+          login.classList.remove('active');
+        }
+      });
+    </script>
   </body>
 </html>
-
