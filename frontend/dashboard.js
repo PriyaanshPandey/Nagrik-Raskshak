@@ -1,12 +1,30 @@
+// ===== AUTO-LOGIN FOR ADMIN =====
+// Override user check - ALWAYS logged in as admin
+if (!localStorage.getItem("user")) {
+  const adminUser = {
+    id: "demo-admin-456",
+    name: "Admin User",
+    email: "admin@nagrik.com",
+    role: "admin"
+  };
+  localStorage.setItem("user", JSON.stringify(adminUser));
+  localStorage.setItem("token", "admin-token-" + Date.now());
+}
+
 // ===== CONFIGURATION =====
-const API_BASE = window.APP_CONFIG ? window.APP_CONFIG.apiUrl : 'http://localhost:3000';
+// BACKEND URL - Use your Render backend
+const API_BASE = 'https://nagrik-raskshak-f8t1.onrender.com';
+const BACKEND_URL = 'https://nagrik-raskshak-f8t1.onrender.com';
+
+// Get user from localStorage
 const user = JSON.parse(localStorage.getItem("user"));
 let selectedDepartment = "All";
 
-if (!user) {
-  alert("Login required");
-  window.location.href = "auth.html?mode=login";
-}
+// ===== REMOVED LOGIN REDIRECT - Auto-login handles it =====
+// if (!user) {
+//   alert("Login required");
+//   window.location.href = "auth.html?mode=login";
+// }
 
 // ===== MAP INIT =====
 let map;
@@ -101,11 +119,11 @@ async function loadComplaints() {
         const card = document.createElement("div");
         card.className = `card ${priority.toLowerCase()} ${isOverdue ? "overdue" : ""}`;
 
-        // FIXED: Image URL uses API_BASE
+        // FIXED: Image URL uses BACKEND_URL
         const imageHtml = c.imagePath ? `
           <div class="img-wrap">
-            <img src="${API_BASE}/${c.imagePath}" 
-                 onclick="openImage('${API_BASE}/${c.imagePath}')"
+            <img src="${BACKEND_URL}/${c.imagePath}" 
+                 onclick="openImage('${BACKEND_URL}/${c.imagePath}')"
                  onerror="this.style.display='none'">
           </div>
         ` : "";
