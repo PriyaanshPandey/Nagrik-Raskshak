@@ -6,10 +6,10 @@
   
   // Configuration for different environments
   const configs = {
-    development: {
-      apiUrl: 'http://localhost:3000',
-      aiServiceUrl: 'http://localhost:5000',
-      firebaseConfig: {
+     development: {
+      apiUrl: 'https://nagrik-raskshak-f8t1.onrender.com', // Will update after deployment
+      aiServiceUrl: 'https://nagrik-raskshak-1.onrender.com', // Will update
+        firebaseConfig: {
         apiKey: "AIzaSyA-OqVS4u4qLnOEtmpjiF5SB70Z7kp04-o",
         authDomain: "safecity-c191a.firebaseapp.com",
         projectId: "safecity-c191a",
@@ -20,7 +20,7 @@
     },
     production: {
       apiUrl: 'https://nagrik-raskshak-f8t1.onrender.com', // Will update after deployment
-      aiServiceUrl: 'https://nagrik-raskshak-ai.onrender.com', // Will update
+      aiServiceUrl: 'https://nagrik-raskshak-1.onrender.com', // Will update
         firebaseConfig: {
         apiKey: "AIzaSyA-OqVS4u4qLnOEtmpjiF5SB70Z7kp04-o",
         authDomain: "safecity-c191a.firebaseapp.com",
