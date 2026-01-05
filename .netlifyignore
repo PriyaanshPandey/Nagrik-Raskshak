@@ -1,0 +1,19 @@
+# .netlifyignore - Files Netlify should NOT deploy
+
+# Backend files
+server.js
+package.json
+package-lock.json
+ai.py
+requirements.txt
+render.yaml
+.env
+serviceAccountKey.json
+
+# Development files
+node_modules/
+__pycache__/
+*.pyc
+
+# Optional: Only include frontend files
+# But Netlify deploying everything is fine too
