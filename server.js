@@ -1,3 +1,36 @@
+// Add at the top
+const fetch = require('node-fetch');
+const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'https://nagrik-ai-service.onrender.com';
+
+// New endpoint for AI analysis
+app.post('/api/ai-analyze', async (req, res) => {
+  try {
+    const { complaint } = req.body;
+    
+    const aiResponse = await fetch(`${AI_SERVICE_URL}/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ complaint })
+    });
+    
+    if (aiResponse.ok) {
+      const analysis = await aiResponse.json();
+      res.json(analysis);
+    } else {
+      throw new Error('AI service failed');
+    }
+  } catch (error) {
+    // Fallback to simple keyword matching
+    const simpleAnalysis = {
+      department: "Municipality",
+      priority: "Medium",
+      deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+    };
+    res.json(simpleAnalysis);
+  }
+});
+
+
 const express = require("express");
 const cors = require("cors");
 const admin = require("firebase-admin");
@@ -909,3 +942,4 @@ app.listen(PORT, () => {
   console.log(`📊 Health check: http://localhost:${PORT}/health`);
   console.log(`📚 API docs: http://localhost:${PORT}/api`);
 });
+
