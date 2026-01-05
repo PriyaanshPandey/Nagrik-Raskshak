@@ -1,3 +1,21 @@
+// ===== AUTO-LOGIN FOR DEMO =====
+// Override user check - ALWAYS logged in
+if (!localStorage.getItem("user")) {
+  const demoUser = {
+    id: "demo-user-123",
+    name: "Demo Citizen",
+    email: "demo@citizen.com",
+    mobile: "9999999999",
+    role: "citizen"
+  };
+  localStorage.setItem("user", JSON.stringify(demoUser));
+  localStorage.setItem("token", "demo-token-" + Date.now());
+}
+
+// Comment out the redirect to auth page:
+// if (user) { ... } else {
+//   window.location.href = "auth.html?mode=login";  // ← COMMENT THIS LINE
+// }
 // ===== CONFIGURATION =====
 // BACKEND URLS - Configure these based on your Render services
 const BACKEND_URL = 'https://nagrik-raskshak-f8t1.onrender.com'; // Your Node backend
@@ -582,3 +600,4 @@ if (user) {
     setInterval(fetchPastComplaints, 30000);
   }, 100);
 }
+
