@@ -12,10 +12,6 @@ if (!localStorage.getItem("user")) {
   localStorage.setItem("token", "demo-token-" + Date.now());
 }
 
-// Comment out the redirect to auth page:
-// if (user) { ... } else {
-//   window.location.href = "auth.html?mode=login";  // ← COMMENT THIS LINE
-// }
 // ===== CONFIGURATION =====
 // BACKEND URLS - Configure these based on your Render services
 const BACKEND_URL = 'https://nagrik-raskshak-f8t1.onrender.com'; // Your Node backend
@@ -37,15 +33,17 @@ if (user) {
   if (loginBtn) loginBtn.style.display = "none";
   if (signupBtn) signupBtn.style.display = "none";
   if (logoutBtn) logoutBtn.classList.remove("hidden");
-} else {
-  // Redirect to login if no user
-  window.location.href = "auth.html?mode=login";
-}
+} 
+// ⚠️ REMOVED THE ELSE REDIRECT - THIS WAS THE PROBLEM!
+// else {
+//   window.location.href = "auth.html?mode=login";
+// }
 
 // ===== LOGOUT FUNCTION =====
 function logout() {
   localStorage.clear();
-  window.location.href = "auth.html?mode=login";
+  // Redirect to home instead of login
+  window.location.href = "index.html";
 }
 
 // ===== PREFILL USER NAME IN FORM =====
@@ -600,4 +598,3 @@ if (user) {
     setInterval(fetchPastComplaints, 30000);
   }, 100);
 }
-
