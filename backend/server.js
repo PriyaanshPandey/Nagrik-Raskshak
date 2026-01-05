@@ -19,38 +19,52 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-// AI Service URL - ADD THIS
-const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'https://nagrik-ai-service.onrender.com';
-// If AI service is not ready, use this fallback:
-// const AI_SERVICE_URL = 'https://nagrik-raskshak-1.onrender.com'; // Your backend URL for fallback
+// AI Service URL - FIXED: Use your actual AI service
+const AI_SERVICE_URL = 'https://nagrik-raskshak-1.onrender.com';
 
 const app = express();
 
-// CORS configuration for production
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5500',
-  'http://127.0.0.1:5500',
-  'nagrik-raskshak-bz63.vercel.app', // Will update after Netlify deployment
-  'https://nagrik-backend.onrender.com',
-  'https://nagrik-raskshak-1.onrender.com'  // Your current backend URL
-];
-
+// 🔥 FIXED CORS CONFIGURATION - ALLOW ALL VERCEL DOMAINS
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`;
-      return callback(new Error(msg), false);
+    // 🔥 ALLOW ALL Vercel and Render domains automatically
+    if (origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) {
+      return callback(null, true);
     }
+    
+    // Also allow specific localhost domains
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5500',
+      'http://127.0.0.1:5500',
+      'https://nagrik-raskshak-bz63.vercel.app',
+      'https://nagrik-raskshak-qdu3.vercel.app',
+      'https://nagrik-raskshak-65qk.vercel.app',
+      'https://nagrik-backend.onrender.com',
+      'https://nagrik-raskshak-1.onrender.com',
+      'https://nagrik-raskshak-f8t1.onrender.com'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    console.warn("CORS blocked (but will allow):", origin);
+    // 🔥 TEMPORARY: Allow anyway for debugging
     return callback(null, true);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Content-Length', 'X-Requested-With']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Content-Length', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  maxAge: 86400 // 24 hours
 }));
+
+// 🔥 HANDLE PREFLIGHT REQUESTS
+app.options('*', cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -206,7 +220,7 @@ app.get("/api", (req, res) => {
 app.get("/", (req, res) => {
   res.json({
     message: "Nagrik Rakshak Backend is running 🚀",
-    backend_url: "https://nagrik-raskshak-1.onrender.com",
+    backend_url: "https://nagrik-raskshak-f8t1.onrender.com",
     ai_service: AI_SERVICE_URL,
     docs: "Visit /api for API documentation",
     health: "Visit /health for service status"
@@ -629,23 +643,128 @@ app.get("/my-complaints", async (req, res) => {
   }
 });
 
-// FAQ array for bot responses (same as before)
+// FAQ array for bot responses
 const FAQS = [
-  // ... (your existing FAQ array - keep it exactly as is)
+  { q: "what is nagrik rakshak", a: "Nagrik Rakshak is a citizen grievance redressal system where you can report issues like water problems, electricity, roads, garbage, etc." },
+  { q: "how to submit complaint", a: "Fill the form above: 1. Enter your name and mobile 2. Describe the problem 3. Select location 4. Upload photo if needed 5. Click Submit" },
+  { q: "check status", a: "Your complaint status appears in 'My Past Complaints' section below. You'll see status like New, Under Review, Resolved." },
+  { q: "water problem", a: "Water issues are forwarded to Water Department. Describe the problem: no water, low pressure, leakage, dirty water, etc." },
+  { q: "electricity issue", a: "Power cuts, street lights, wires - these go to Electricity Department. Mention location and problem details." },
+  { q: "garbage", a: "Garbage complaints go to Municipality. Specify if it's regular waste, construction debris, or drain cleaning needed." },
+  { q: "road repair", a: "Potholes, broken roads, footpaths are handled by PWD (Public Works Department). Mention exact location." },
+  { q: "emergency", a: "For emergencies like live wires, accidents, fires - call emergency services first, then submit complaint here for follow-up." }
 ];
 
 /**
  * BOT QUERY ENDPOINT
  */
 app.post("/bot-query", (req, res) => {
-  // ... (your existing bot-query code - keep it exactly as is)
+  try {
+    const { message } = req.body;
+    const query = (message || "").toLowerCase().trim();
+    
+    console.log("Bot query:", query);
+    
+    // Find matching FAQ
+    let reply = "I can help you with:\n• Submitting complaints\n• Checking status\n• Department information\n• Process guidance\n\nJust ask me anything!";
+    
+    for (const faq of FAQS) {
+      if (query.includes(faq.q.toLowerCase())) {
+        reply = faq.a;
+        break;
+      }
+    }
+    
+    // Check for complaint status queries
+    if (query.includes("status") || query.includes("update") || query.includes("track")) {
+      reply = "Check your complaint status in the 'My Past Complaints' section below. Each complaint shows its current status and latest updates.";
+    }
+    
+    // Check for complaint submission
+    if (query.includes("submit") || query.includes("complaint") || query.includes("report")) {
+      reply = "To submit a complaint:\n1. Fill the form above\n2. Add description and location\n3. Upload image if needed\n4. Click Submit\n\nYour complaint will be tracked below.";
+    }
+    
+    res.json({ 
+      success: true, 
+      reply: reply,
+      query: query,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Bot query error:", error);
+    res.json({ 
+      success: false, 
+      reply: "I'm having trouble understanding. Please try again or use the form above to submit a complaint.",
+      error: error.message 
+    });
+  }
 });
 
 /**
  * BOT - CHECK COMPLAINT STATUS
  */
 app.post("/bot-check-status", async (req, res) => {
-  // ... (your existing bot-check-status code - keep it exactly as is)
+  try {
+    const { userId, message } = req.body;
+    
+    if (!userId) {
+      return res.json({ 
+        success: false, 
+        reply: "Please log in first to check your complaint status." 
+      });
+    }
+    
+    // Get user's complaints
+    const complaintsRef = db.collection("complaints");
+    const snapshot = await complaintsRef.where("userId", "==", userId).get();
+    
+    const complaints = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        description: data.description || "",
+        status: data.status || "Pending",
+        createdAt: data.createdAt?.toDate?.() || new Date(),
+        address: data.address || ""
+      };
+    });
+    
+    if (complaints.length === 0) {
+      return res.json({ 
+        success: true, 
+        reply: "You haven't submitted any complaints yet. Use the form above to submit your first complaint." 
+      });
+    }
+    
+    // Sort by latest first
+    complaints.sort((a, b) => b.createdAt - a.createdAt);
+    
+    const latest = complaints[0];
+    const daysAgo = Math.floor((new Date() - latest.createdAt) / (1000 * 60 * 60 * 24));
+    const timeText = daysAgo === 0 ? "today" : daysAgo === 1 ? "yesterday" : `${daysAgo} days ago`;
+    
+    let reply = `You have ${complaints.length} complaint(s).\n\n`;
+    reply += `**Latest complaint** (submitted ${timeText}):\n`;
+    reply += `• **Issue:** ${latest.description.substring(0, 80)}${latest.description.length > 80 ? '...' : ''}\n`;
+    reply += `• **Status:** ${latest.status}\n`;
+    reply += `• **Location:** ${latest.address || 'Not specified'}\n\n`;
+    reply += `Check all complaints in 'My Past Complaints' section below.`;
+    
+    res.json({ 
+      success: true, 
+      reply: reply,
+      count: complaints.length,
+      latestStatus: latest.status
+    });
+    
+  } catch (error) {
+    console.error("Bot status check error:", error);
+    res.json({ 
+      success: false, 
+      reply: "I'm having trouble accessing your complaints. Please check the 'My Past Complaints' section directly." 
+    });
+  }
 });
 
 // 404 handler for undefined routes
@@ -673,13 +792,9 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Backend URL: https://nagrik-raskshak-1.onrender.com`);
+  console.log(`🔗 Backend URL: https://nagrik-raskshak-f8t1.onrender.com`);
   console.log(`🤖 AI Service URL: ${AI_SERVICE_URL}`);
   console.log(`🏥 Health check: http://localhost:${PORT}/health`);
   console.log(`🤖 AI Health check: http://localhost:${PORT}/api/ai-health`);
   console.log(`📚 API docs: http://localhost:${PORT}/api`);
 });
-
-
-
-
