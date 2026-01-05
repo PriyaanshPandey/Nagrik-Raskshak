@@ -6,6 +6,8 @@ if (!user) {
   window.location.href = "auth.html?mode=login";
 }
 
+const API_BASE = window.APP_CONFIG.apiUrl;
+
 // ================= MAP INIT =================
 const map = L.map("map").setView([26.7606, 83.3732], 13);
 function addComplaintMarker(c) {
@@ -250,7 +252,7 @@ async function updateStatus(complaintId, newStatus) {
   if (!confirm(`Change status to "${newStatus}"?`)) return;
 
   try {
-    const res = await fetch("http://localhost:3000/update-complaint-status", {
+    const res = await fetch(`${API_BASE}/update-complaint-status`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -410,3 +412,4 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key === "Escape") closeImage();
   });
 });
+
