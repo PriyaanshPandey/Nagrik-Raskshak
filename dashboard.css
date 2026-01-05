@@ -1,0 +1,661 @@
+
+/* Add these new styles to your existing dashboard.css */
+
+/* OVERDUE ALERT - RED BACKGROUND */
+body.overdue-alert {
+  animation: blinkRed 2s infinite alternate;
+}
+
+@keyframes blinkRed {
+  0% { background-color: rgba(255, 0, 0, 0.1); }
+  100% { background-color: rgba(255, 0, 0, 0.3); }
+}
+
+/* OVERDUE ITEMS */
+.card.overdue, .risk-item.overdue {
+  border: 2px solid #ff4444 !important;
+  animation: pulseOverdue 1.5s infinite;
+  position: relative;
+}
+
+.card.overdue::before, .risk-item.overdue::before {
+  content: "⚠️ OVERDUE";
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ff4444;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 10;
+}
+
+@keyframes pulseOverdue {
+  0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+}
+
+/* STATUS BADGES */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.new {
+  background: #ff9800;
+  color: #000;
+}
+
+.status-badge.classified {
+  background: #2196f3;
+  color: white;
+}
+
+.status-badge.under_action {
+  background: #9c27b0;
+  color: white;
+}
+
+.status-badge.resolved {
+  background: #4caf50;
+  color: white;
+}
+
+/* ACTION BUTTONS */
+.action-buttons {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  min-width: 120px;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.mark-action {
+  background: linear-gradient(135deg, #ff9800, #ff5722);
+  color: white;
+}
+
+.mark-resolved {
+  background: linear-gradient(135deg, #4caf50, #2e7d32);
+  color: white;
+}
+
+.resolved-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #4caf50;
+  color: white;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* TIME PASSED STYLING */
+.time-passed {
+  font-size: 11px;
+  color: #aaa;
+  margin: 4px 0;
+}
+
+.time-passed.urgent {
+  color: #ff4444;
+  font-weight: bold;
+}
+
+/* HEADER OVERDUE ALERT */
+.overdue-count {
+  background: #ff4444;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 8px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Keep all your existing CSS below this line */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 32px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+}
+
+/* LEFT */
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* CENTER */
+.role-toggle {
+  display: flex;
+  gap: 14px;
+}
+
+.role-btn {
+  padding: 6px 16px;
+  border-radius: 20px;
+  text-decoration: none;
+  font-size: 14px;
+  color: #ddd;
+  border: 1px solid rgba(255,255,255,0.3);
+  transition: all 0.25s ease;
+}
+
+.role-btn:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.role-btn.active {
+  background: #ffffff;
+  color: #000;
+  font-weight: 600;
+}
+
+/* RIGHT */
+.auth {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.auth button {
+  padding: 6px 14px;
+  border-radius: 18px;
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.auth .login {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.4);
+}
+
+.auth .signup {
+  background: #ffffff;
+  color: #000;
+  font-weight: 600;
+}
+
+/* USER NAME */
+#userName {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-right: 12px;
+}
+
+:root {
+  --purple-main: #7b3cff;
+  --purple-soft: #9b5cff;
+  --border-soft: rgba(255,255,255,0.08);
+  --electric-border-color: #6348dd;
+  --electric-light-color: oklch(from var(--electric-border-color) l c h);
+  --gradient-color: oklch(
+    from var(--electric-border-color) 0.3 calc(c / 2) h / 0.4
+  );
+  --color-neutral-900: oklch(0.185 0 0);
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: radial-gradient(circle at top, #0f0f1a, #05050c);
+  color: white;
+  overflow-x: hidden;
+  min-height: 100vh;
+  width: 100%;
+}
+
+header {
+  height: 50px;
+  padding: 0 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #0b0b14, #0f0f1f);
+  border-bottom: 1px solid var(--border-soft);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo { 
+  color: var(--purple-soft);
+  font-size: 22px; 
+  font-weight: 600;
+}
+
+.auth button {
+  margin-left: 10px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.login {
+  background: transparent;
+  color: white;
+  border: 1px solid var(--border-soft);
+}
+
+.login:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 8px rgba(155,92,255,0.6);
+  border-color: var(--purple-soft);
+}
+
+.signup {
+  border: none;
+  color: white;
+  background: linear-gradient(135deg, var(--purple-main), var(--purple-soft));
+}
+
+.signup:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow:
+    0 0 8px rgba(155,92,255,0.9),
+    0 0 10px rgba(155,92,255,0.4);
+}
+
+/* SWITCH */
+.switch-wrapper {
+  margin: 5px auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+}
+
+.switch {
+  width: 85px;
+  height: 26px;
+  background: #661eda;
+  border-radius: 999px;
+  position: relative;
+  cursor: grab;
+}
+
+.knob {
+  width: 24px;
+  height: 24px;
+  background: #e92d69;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: 0.3s;
+}
+
+/* MAIN */
+main {
+  padding: 20px 40px;
+}
+
+/* MAP */
+#mapView {
+  min-height: 420px;
+  position: relative;
+  z-index: 2;
+}
+
+#map {
+  height: 380px;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  border-radius: 12px;
+  opacity: 80%;
+  position: relative;
+  z-index: 2;
+}
+
+/* RECENT */
+.recent {
+  margin-top: 20px;
+}
+
+.cards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.card {
+  width: 280px; /* Increased width for buttons */
+  padding: 15px;
+  border-radius: 14px;
+  background: #121222;
+  position: relative;
+  color: white;
+  margin-bottom: 20px;
+}
+
+/* IMAGE */
+.img-wrap {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.img-wrap img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* TAG ON IMAGE */
+.img-wrap .priority {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+}
+
+/* PRIORITY STYLES */
+.card.high {
+  box-shadow: 0 0 18px rgba(255, 77, 77, 0.5);
+}
+
+.card.medium {
+  box-shadow: 0 0 18px rgba(255, 204, 0, 0.5);
+}
+
+.card.low {
+  box-shadow: 0 0 18px rgba(74, 222, 128, 0.5);
+}
+
+/* PRIORITY BADGES */
+.priority {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.priority.high {
+  background: rgba(255, 77, 77, 0.2);
+  color: #ff4d4d;
+  border: 1px solid #ff4d4d;
+}
+
+.priority.medium {
+  background: rgba(255, 204, 0, 0.2);
+  color: #ffcc00;
+  border: 1px solid #ffcc00;
+}
+
+.priority.low {
+  background: rgba(74, 222, 128, 0.2);
+  color: #4ade80;
+  border: 1px solid #4ade80;
+}
+
+/* LIST VIEW */
+.list-box {
+  border: 2px solid white;
+  border-radius: 12px;
+  padding: 25px;
+  width: 70%;
+  max-width: 900px;
+  margin: 0 auto;
+  background: #000;
+}
+
+/* UTILITY */
+.hidden {
+  display: none;
+}
+
+/* CENTER ROLE TOGGLE */
+.role-toggle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+}
+
+.role-btn {
+  padding: 6px 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.75);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.role-btn:hover {
+  color: white;
+  background: rgba(255,255,255,0.1);
+}
+
+.role-btn.active {
+  background: linear-gradient(
+    135deg,
+    var(--purple-main),
+    var(--purple-soft)
+  );
+  color: white;
+  box-shadow: 0 0 6px rgba(155,92,255,0.8);
+}
+
+/* IMAGE MODAL */
+.image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.image-modal.hidden {
+  display: none;
+}
+
+.image-modal img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 14px;
+  box-shadow: 0 0 30px rgba(0,0,0,0.7);
+  animation: zoomIn 0.3s ease;
+}
+
+.close-btn {
+  position: absolute;
+  top: 25px;
+  right: 30px;
+  font-size: 26px;
+  color: white;
+  cursor: pointer;
+  background: rgba(255,255,255,0.15);
+  padding: 6px 12px;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.close-btn:hover {
+  background: rgba(255, 0, 0, 0.85);
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* RISK LAYOUT */
+.risk-container {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.risk-section {
+  border-radius: 14px;
+  padding: 16px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid white;
+}
+
+.risk-section h2 {
+  margin-bottom: 12px;
+  font-size: 20px;
+}
+
+/* COLOR CODING */
+.risk-section.high {
+  border-color: #ff4d4d;
+}
+.risk-section.medium {
+  border-color: #ffcc00;
+}
+.risk-section.low {
+  border-color: #4ade80;
+}
+
+/* RISK ITEMS */
+.risk-list {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.risk-item {
+  width: 280px; /* Increased width */
+  padding: 12px;
+  border-radius: 10px;
+  background: #1c1c28;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.risk-item .desc {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* DEPARTMENT FILTER */
+.dept-filter select {
+  padding: 6px 14px;
+  border-radius: 10px;
+  background: #121222;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.auth {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dept-filter {
+  margin-right: 10px;
+}
+/* Add to existing dashboard.css */
+.status-notification {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  background: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 9999;
+  animation: slideIn 0.3s ease;
+}
+
+.status-notification.error {
+  background: #f44336;
+}
+
+.status-notification.info {
+  background: #2196f3;
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notification-content button {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

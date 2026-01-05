@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Login Page</title>
+    <link rel="stylesheet" href="auth.css" />
+  </head>
+
+  <body
+    style="
+      background: linear-gradient(
+          rgba(0, 0, 0, 0.65),
+          rgba(0, 0, 0, 0.65)
+        ),
+        url('loback (1).jpg');
+      backdrop-filter: blur(6px);
+    "
+  >
+    <div style="background: #2e2e2e; border-radius: 18px">
+      <div class="container">
+        <div class="left-panel">
+          <h1>WELCOME<br />BACK</h1>
+          <p>Secure access to the grievance management system</p>
+        </div>
+
+        <div class="right-panel">
+          <!-- SIGNUP -->
+          <div class="content signup" id="signup">
+            <h2>Register To The Portal</h2>
+            <input id="su-name" type="text" placeholder="Username" />
+            <input id="su-email" type="email" placeholder="Email" />
+            <input id="su-password" type="password" placeholder="Password" />
+            <button type="button" onclick="register()">Register</button>
+            <p class="switch" onclick="switchPanel()">
+              Already have an account? Login
+            </p>
+          </div>
+
+          <!-- LOGIN -->
+          <div class="content login" id="login">
+            <h2>System Login</h2>
+            <input id="li-email" type="email" placeholder="Enter Registered Email" />
+            <input id="li-password" type="password" placeholder="Enter Password" />
+            <button type="button" onclick="login()">Login</button>
+            <p class="switch" onclick="switchPanel()">
+              Create new account
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ LOAD JS AFTER DOM -->
+    <script src="auth.js" defer></script>
+  </body>
+</html>

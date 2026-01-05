@@ -1,0 +1,286 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nagrik Rakshak</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script> tailwind.config = { theme: { extend: { fontFamily: { segoe: ['"Segoe UI"', "Tahoma", "Geneva", "Verdana", "sans-serif",], }, colors: { purpleMain: "#7b3cff", purpleSoft: "#9b5cff", }, }, }, }; </script>
+</head>
+
+<body style="background-image: url('background.jpeg')">
+  <div class="min-h-screen w-screen bg-black/75">
+    <header
+      class="h-[56px] px-6 grid grid-cols-3 items-center bg-gradient-to-r from-[#0b0b14] to-[#0f0f1f] border-b border-white/10 sticky top-0 z-50">
+
+      <div class="text-[22px] font-semibold text-purpleSoft whitespace-nowrap"> NagrikRakshak </div>
+
+      <div class="flex justify-center">
+        <div class="flex items-center bg-black/30 p-1 rounded-full border border-white/10 backdrop-blur-sm"> <a href="#"
+            class="px-5 py-1.5 rounded-full text-sm font-medium bg-gradient-to-br from-purpleMain to-purpleSoft text-white shadow-[0_0_6px_rgba(155,92,255,0.8)]">
+            Citizen </a> <a href="dashboard.html"
+            class="px-5 py-1.5 rounded-full text-sm font-medium text-white/80 hover:text-white transition-all duration-300 hover:bg-white/10 rounded-full">
+            Admin </a> </div>
+      </div>
+      <div class="flex justify-end items-center gap-3 text-sm text-white"> <span id="loggedUser"
+          class="hidden opacity-80"> Logged in as <b id="loggedUserName" class="text-violet-400"></b> </span> <button
+          id="loginBtn" onclick="openLogin()"
+          class="px-[18px] py-2 rounded-full border border-white/10 bg-transparent text-white transition-all duration-300 hover:-translate-y-[2px] hover:border-purpleSoft hover:shadow-[0_0_8px_rgba(155,92,255,0.6)]">
+          Login </button> <button id="signupBtn" onclick="openSignup()"
+          class="px-[18px] py-2 rounded-full text-white bg-gradient-to-br from-purpleMain to-purpleSoft transition-all duration-300 hover:-translate-y-[2px] hover:scale-[1.01] hover:shadow-[0_0_8px_rgba(155,92,255,0.9)]">
+          Sign Up </button> <button id="logoutBtn" onclick="logout()"
+          class="hidden px-[16px] py-2 rounded-full border border-red-400/40 text-red-300 hover:bg-red-500/20"> Logout
+        </button> </div>
+    </header> 
+    <section class="">
+      <div class="container px-5 py-24 mx-auto">
+        <div class="flex flex-col text-center w-full mb-12">
+          <h1 class="sm:text-5xl font-medium font-segoe font-bold title-font mb-4 text-violet-400"> File a Complaint
+          </h1>
+          <p class="animate-typewriter :w-2/3 mx-auto font-segoe text-xl text-violet-300 font-serif leading-relaxed">
+            Your voice matters. Provide the details below to help us address your concerns. </p>
+        </div>
+        <div class="w-full md:w-2/3 lg:w-1/2 mx-auto">
+          <form id="complaintForm" class="flex flex-wrap -m-2" action="javascript:void(0)">
+            <div class="p-2 w-full md:w-1/2">
+              <div class="relative"> <label for="name" class="leading-7 text-xl font-segoe text-violet-300">Name</label>
+                <input type="text" id="name" name="name" readonly
+                  class="w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out" />
+              </div>
+            </div>
+            <div class="p-2 w-1/2">
+              <div class="relative"> <label for="email" class="leading-7 text-xl font-segoe text-violet-300">Mobile
+                  no.</label> <input type="number" id="email" name="mobilenumber"
+                  class="w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out" />
+              </div>
+            </div>
+            <div class="p-2 w-full">
+              <div class="relative"> <label for="message"
+                  class="leading-7 font-segoe text-xl text-violet-300">Complaint</label> <textarea id="message"
+                  name="message"
+                  class="w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200 h-32 text-base outline-none text-gray-700 py-1 px-3 resize-none leading-6 transition-colors duration-200 ease-in-out"></textarea>
+              </div>
+            </div>
+            <div class="w-full"> <label class="block mb-2 text-sm font-medium text-violet-300">Location
+                (Gorakhpur)</label> <select id="areaSelect"
+                class="w-full bg-gray-100 bg-opacity-50 rounded border border-gray-300 text-gray-700 py-2 px-3">
+                <option value="">Auto detect (Device location)</option>
+                <option value="Golghar">Golghar</option>
+                <option value="Rustampur">Rustampur</option>
+                <option value="Gorakhnath">Gorakhnath</option>
+                <option value="Mohaddipur">Mohaddipur</option>
+                <option value="Chargawan">Chargawan</option>
+                <option value="Medical College">BRD Medical College</option>
+                <option value="University">DDU University</option>
+                <option value="Railway Station">Gorakhpur Railway Station</option>
+              </select> <input type="hidden" id="lat" /> <input type="hidden" id="lng" /> </div>
+            <div class="w-full"> <label class="block mb-2 text-sm font-medium font-segoe text-violet-300">Upload Image
+                (Optional)</label>
+              <div class="flex items-center justify-center w-full"> <label for="dropzone-file"
+                  class="flex flex-col items-center justify-center w-full h-44 border-2 border-dashed rounded-xl cursor-pointer bg-white/10 border-white/30 hover:bg-white/20 transition-all duration-300 backdrop-blur-sm">
+                  <div class="flex flex-col items-center justify-center pt-5 pb-6"> <svg
+                      class="w-10 h-10 mb-3 text-gray-300" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                      fill="none" viewBox="0 0 20 16">
+                      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+                    </svg>
+                    <p id="uploadText" class="mb-2 text-sm text-gray-200"> <span class="font-semibold">Click to
+                        upload</span> or drag and drop </p>
+                    <p id="uploadedText" class="hidden text-sm text-green-400 font-semibold"> ✅ Image uploaded </p>
+                    <p class="text-xs text-gray-400"> PNG, JPG or PDF (MAX. 5MB) </p>
+                  </div> <input id="dropzone-file" type="file" class="hidden" accept="image/*" />
+                </label> </div>
+            </div>
+            <div class="p-2 w-full"> <button id="submitBtn" type="submit"
+                class="w-full md:w-auto flex justify-center mx-auto text-white bg-violet-700 rounded-full py-3 px-8 hover:bg-violet-900 text-lg">
+                SUBMIT </button> </div>
+          </form>
+        </div>
+      </div>
+    </section> 
+    <section class="container px-5 py-12 mx-auto">
+      <h2 class="text-3xl font-bold font-segoe text-violet-400 mb-6 text-center">My Past Complaints</h2>
+      <div id="pastComplaints" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+   
+      </div>
+    </section> 
+    <div id="successModal" class="fixed inset-0 bg-black/70 z-50 hidden">
+      <div class="flex min-h-screen items-center justify-center p-4">
+        <div
+          class="bg-[#0f0f1f] border border-white/20 rounded-2xl p-8 w-full max-w-md text-center shadow-[0_0_30px_rgba(139,92,246,0.5)]">
+          <h2 class="text-2xl font-bold text-violet-400 mb-3"> ✅ Complaint Submitted </h2>
+          <p class="text-gray-300 mb-6"> Your complaint has been submitted successfully.<br /> Our team will take action
+            shortly. </p> <button onclick="closeSuccessModal()"
+            class="px-6 py-2 rounded-full bg-violet-700 hover:bg-violet-900 transition-all text-white font-semibold"> OK
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="botToggle" onclick="toggleBot()" class="fixed bottom-6 right-6 w-14 h-14 rounded-full
+            bg-gradient-to-br from-purpleMain to-purpleSoft
+            flex items-center justify-center cursor-pointer
+            shadow-lg z-50"><span class="bot-icon">🤖</span>
+
+    
+  </div>
+ 
+<div id="botBox"
+     class="fixed bottom-20 right-6 w-80 bg-[#0f0f1f]
+            border border-white/20 rounded-xl shadow-xl
+             z-50">
+
+
+  <div class="p-3 flex justify-between items-center
+              text-violet-400 font-semibold border-b border-white/10">
+    <span>Nagrik Assistant 🤖</span>
+    <button onclick="toggleBot()" class="text-gray-400 hover:text-white">✕</button>
+  </div>
+
+
+  <div id="botMessages" class="p-3 h-48 overflow-y-auto text-sm text-gray-300">
+    <div class="mb-2">👋 Hi! How can I help you today?</div>
+  </div>
+
+
+  <div class="flex border-t border-white/10">
+    <input id="botInput"
+           class="flex-1 bg-transparent px-3 py-2 text-white outline-none"
+           placeholder="Ask something..." />
+    <button onclick="sendBotMessage()" class="px-4 text-violet-400">Send</button>
+  </div>
+</div>
+
+  
+  
+
+
+
+
+
+  <style>
+    /* Bot message styling */
+    .bot-icon {
+  font-size: 34px;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px rgba(155, 92, 255, 0.8))
+          drop-shadow(0 0 14px rgba(155, 92, 255, 0.6));
+  animation: botGlow 2.5s ease-in-out infinite;
+}
+
+    
+/* BOT OPEN / CLOSE ANIMATION */
+#botBox {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow:
+    0 0 6px rgba(155, 92, 255, 0.6),
+    0 0 14px rgba(155, 92, 255, 0.4);
+  animation: botPulse 3s ease-in-out infinite;
+  
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+#botBox.active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  
+  box-shadow:
+    0 0 8px rgba(155, 92, 255, 0.7),
+    0 0 18px rgba(155, 92, 255, 0.45);
+
+}
+
+
+    .typing {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .typing span {
+      height: 8px;
+      width: 8px;
+      margin: 0 1px;
+      background-color: #9b5cff;
+      border-radius: 50%;
+      display: inline-block;
+      animation: typing 1.4s infinite ease-in-out both;
+    }
+
+    .typing span:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+
+    .typing span:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+
+    @keyframes typing {
+
+      0%,
+      80%,
+      100% {
+        transform: scale(0);
+      }
+
+      40% {
+        transform: scale(1);
+      }
+    }
+    #botBox > div:first-child {
+  box-shadow: inset 0 -1px 0 rgba(155, 92, 255, 0.4);
+}
+
+
+    /* Bot suggestions */
+    .bot-suggestions {
+      background: rgba(155, 92, 255, 0.1);
+      border-left: 3px solid #9b5cff;
+      padding: 8px 12px;
+      margin: 8px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .bot-suggestions p {
+      margin: 4px 0;
+      font-size: 12px;
+      color: #d1d5db;
+    }
+    @keyframes botGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px rgba(155, 92, 255, 0.6))
+            drop-shadow(0 0 14px rgba(155, 92, 255, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(155, 92, 255, 1))
+            drop-shadow(0 0 22px rgba(155, 92, 255, 0.8));
+  }
+}
+
+@keyframes botPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 12px rgba(155, 92, 255, 0.6),
+      0 0 25px rgba(155, 92, 255, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 0 18px rgba(155, 92, 255, 0.9),
+      0 0 15px rgba(155, 92, 255, 0.7);
+  }
+}
+
+  </style>
+  <script src="index.js"></script>
+</body>
+
+</html>

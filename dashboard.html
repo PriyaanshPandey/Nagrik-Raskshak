@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>NagrikRakshak</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Leaflet -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+
+  <body
+    style="
+      background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+        url('Parliament.jpg');
+    "
+  >
+   <header>
+      
+      <div class="logo">NagrikRakshak</div>
+
+ 
+      <div class="role-toggle">
+        <a href="index.html" class="role-btn">Citizen</a>
+        <a href="#" class="role-btn active">Admin</a>
+      </div>
+ 
+      <div class="auth">
+        <div class="dept-filter">
+          <select id="departmentSelect">
+            <option value="All">All Departments</option>
+            <option value="Police">Police</option>
+            <option value="Electricity">Electricity</option>
+            <option value="PWD">PWD</option>
+            <option value="Water">Water</option>
+            <option value="Municipality">Municipality</option>
+            <option value="Traffic">Traffic</option>
+          </select>
+        </div>
+
+        <div id="userName"></div>
+        <button class="login" onclick="openLogin()">Login</button>
+        <button class="signup" onclick="openSignup()">Sign Up</button>
+      </div>
+    </header> 
+
+
+<!-- MOBILE MENU -->
+<div id="mobileMenu" class="mobile-menu hidden">
+  <a href="index.html">Citizen</a>
+  <a href="#">Admin</a>
+
+  <select id="departmentSelectMobile">
+    <option>All</option>
+    <option>Police</option>
+    <option>Electricity</option>
+  </select>
+
+  <button class="login">Login</button>
+</div>
+
+
+
+<!-- MOBILE MENU-->
+<div id="mobileMenu" class="mobile-menu hidden">
+  <a href="index.html">Citizen</a>
+  <a href="#">Admin</a>
+
+  <select id="departmentSelectMobile">
+    <option>All</option>
+    <option>Police</option>
+    <option>Electricity</option>
+  </select>
+
+  <button class="login">Login</button>
+</div> 
+
+
+    <!-- 🔘 DRAG TOGGLE -->
+    <div class="switch-wrapper">
+      <span>Map</span>
+      <div class="switch" id="switch">
+        <div class="knob" id="knob"></div>
+      </div>
+      <span>List</span>
+    </div>
+
+    <main>
+      <!-- MAP VIEW -->
+      <section id="mapView">
+        <div id="map"></div>
+
+        <div class="recent">
+          <h3>Recent Complaints</h3>
+          <div class="cards" id="recentComplaints"></div>
+        </div>
+      </section>
+
+      <!-- LIST VIEW -->
+      <section id="listView" class="hidden">
+        <div class="risk-container">
+          <div class="risk-section high">
+            <h2>🔴 High Risk</h2>
+            <div id="highRisk" class="risk-list"></div>
+          </div>
+
+          <div class="risk-section medium">
+            <h2>🟡 Medium Risk</h2>
+            <div id="mediumRisk" class="risk-list"></div>
+          </div>
+
+          <div class="risk-section low">
+            <h2>🟢 Low Risk</h2>
+            <div id="lowRisk" class="risk-list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="dashboard.js"></script>
+    <!-- IMAGE PREVIEW MODAL -->
+    <div id="imageModal" class="image-modal hidden">
+      <span class="close-btn" onclick="closeImage()">✖</span>
+      <img id="modalImg" src="" />
+    </div>
+  </body>
+</html>
