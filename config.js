@@ -20,7 +20,7 @@
     },
     production: {
       apiUrl: 'https://nagrik-raskshak-f8t1.onrender.com', // Will update after deployment
-      aiServiceUrl: 'https://nagrik-ai-service.onrender.com', // Will update
+      aiServiceUrl: 'https://nagrik-raskshak-ai.onrender.com', // Will update
         firebaseConfig: {
         apiKey: "AIzaSyA-OqVS4u4qLnOEtmpjiF5SB70Z7kp04-o",
         authDomain: "safecity-c191a.firebaseapp.com",
