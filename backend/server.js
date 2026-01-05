@@ -31,7 +31,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5500',
   'http://127.0.0.1:5500',
-  'nagrik-raskshak-qdu3-2hc0ntlw6-priyaanshpandeys-projects.vercel.app', // Will update after Netlify deployment
+  'https://nagrik-raskshak-qdu3.vercel.app', // Will update after Netlify deployment
   'https://nagrik-backend.onrender.com',
   'https://nagrik-raskshak-1.onrender.com'  // Your current backend URL
 ];
@@ -679,4 +679,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🤖 AI Health check: http://localhost:${PORT}/api/ai-health`);
   console.log(`📚 API docs: http://localhost:${PORT}/api`);
 });
+
 
