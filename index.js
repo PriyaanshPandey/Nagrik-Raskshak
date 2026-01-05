@@ -1,4 +1,5 @@
-
+// ===== CONFIGURATION =====
+const API_BASE = window.APP_CONFIG ? window.APP_CONFIG.apiUrl : 'http://localhost:3000';
 const user = JSON.parse(localStorage.getItem("user"));
 
 // ===== HEADER USER STATE =====
@@ -18,7 +19,7 @@ function logout() {
 }
 
 // ===== PREFILL NAME =====
-document.getElementById("name").value = user.name;
+document.getElementById("name").value = user ? user.name : "";
 
 // ===== IMAGE INPUT =====
 const imageInput = document.getElementById("dropzone-file");
@@ -38,84 +39,100 @@ const areaCoords = {
 };
 
 document.getElementById("areaSelect").addEventListener("change", () => {
-  const area = areaSelect.value;
+  const area = document.getElementById("areaSelect").value;
   if (area && areaCoords[area]) {
     document.getElementById("lat").value = areaCoords[area][0];
     document.getElementById("lng").value = areaCoords[area][1];
-  } else {
+  } else if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition((pos) => {
       document.getElementById("lat").value = pos.coords.latitude;
       document.getElementById("lng").value = pos.coords.longitude;
+    }, () => {
+      // Default location if geolocation fails
+      document.getElementById("lat").value = areaCoords.Golghar[0];
+      document.getElementById("lng").value = areaCoords.Golghar[1];
     });
+  } else {
+    document.getElementById("lat").value = areaCoords.Golghar[0];
+    document.getElementById("lng").value = areaCoords.Golghar[1];
   }
 });
 
 // ===== SUBMIT FORM =====
-document
-  .getElementById("complaintForm")
-  .addEventListener("submit", async (e) => {
-    e.preventDefault();
+document.getElementById("complaintForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-    const name = document.getElementById("name").value.trim();
-    const mobile = document.getElementById("email").value.trim();
-    const complaint = document.getElementById("message").value.trim();
+  const name = document.getElementById("name").value.trim();
+  const mobile = document.getElementById("email").value.trim();
+  const complaint = document.getElementById("message").value.trim();
 
-    if (!name || !mobile || mobile.length != 10 || !complaint) {
-      alert("⚠️ Fill Name, Mobile and Complaint");
-      return;
-    }
+  if (!name || !mobile || !complaint) {
+    alert("⚠️ Fill Name, Mobile and Complaint");
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("mobile", mobile);
-    formData.append("description", complaint);
-    formData.append("lat", document.getElementById("lat").value);
-    formData.append("lng", document.getElementById("lng").value);
-    formData.append("userId", user.id);
-    formData.append("userName", user.name);
+  if (mobile.length !== 10 || !/^\d+$/.test(mobile)) {
+    alert("⚠️ Mobile number must be 10 digits");
+    return;
+  }
 
-    if (imageInput.files.length > 0) {
-      formData.append("image", imageInput.files[0]);
-    }
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("mobile", mobile);
+  formData.append("description", complaint);
+  formData.append("lat", document.getElementById("lat").value);
+  formData.append("lng", document.getElementById("lng").value);
+  formData.append("userId", user.id);
+  formData.append("userName", user.name);
 
-    try {
-      const res = await fetch("http://localhost:3000/submit-complaint", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        const modal = document.getElementById("successModal");
-        modal.classList.remove("hidden");
-        modal.style.display = "flex";
-
-        setTimeout(() => {
-          e.target.reset();
-          uploadedText.classList.add("hidden");
-          uploadText.classList.remove("hidden");
-        }, 300);
-
-        // REFRESH PAST COMPLAINTS AFTER SUBMIT
-        fetchPastComplaints();
-      }
-    } catch (err) {
-      alert("Server error. Try again later.");
-      console.error(err);
-    }
-  });
-
-// ===== IMAGE UPLOAD UI =====
-imageInput.addEventListener("change", () => {
   if (imageInput.files.length > 0) {
-    uploadText.classList.add("hidden");
-    uploadedText.classList.remove("hidden");
-  } else {
-    uploadedText.classList.add("hidden");
-    uploadText.classList.remove("hidden");
+    formData.append("image", imageInput.files[0]);
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/submit-complaint`, {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      const modal = document.getElementById("successModal");
+      modal.classList.remove("hidden");
+      modal.style.display = "flex";
+
+      setTimeout(() => {
+        e.target.reset();
+        uploadedText.classList.add("hidden");
+        uploadText.classList.remove("hidden");
+        modal.classList.add("hidden");
+        modal.style.display = "none";
+      }, 2000);
+
+      // REFRESH PAST COMPLAINTS AFTER SUBMIT
+      fetchPastComplaints();
+    } else {
+      alert(data.error || "Submission failed");
+    }
+  } catch (err) {
+    console.error("Submission error:", err);
+    alert("Server error. Try again later.");
   }
 });
+
+// ===== IMAGE UPLOAD UI =====
+if (imageInput) {
+  imageInput.addEventListener("change", () => {
+    if (imageInput.files.length > 0) {
+      uploadText.classList.add("hidden");
+      uploadedText.classList.remove("hidden");
+    } else {
+      uploadedText.classList.add("hidden");
+      uploadText.classList.remove("hidden");
+    }
+  });
+}
 
 // ===== CLOSE MODAL =====
 function closeSuccessModal() {
@@ -128,15 +145,15 @@ window.closeSuccessModal = closeSuccessModal;
 // ===== FETCH PAST COMPLAINTS =====
 async function fetchPastComplaints() {
   try {
-    const res = await fetch(
-      `http://localhost:3000/my-complaints?userId=${user.id}`
-    );
-    if (!res.ok) throw new Error("Network error");
+    const res = await fetch(`${API_BASE}/my-complaints?userId=${user.id}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const complaints = await res.json();
-    if (!Array.isArray(complaints)) throw new Error("Invalid data from server");
+    const data = await res.json();
+    const complaints = Array.isArray(data) ? data : (data.complaints || []);
 
     const container = document.getElementById("pastComplaints");
+    if (!container) return;
+    
     container.innerHTML = "";
 
     if (complaints.length === 0) {
@@ -145,7 +162,7 @@ async function fetchPastComplaints() {
     }
 
     complaints.forEach((c) => {
-      const createdAt = new Date(c.createdAt);
+      const createdAt = c.createdAt ? new Date(c.createdAt) : new Date();
       const now = new Date();
       const diffHours = Math.floor((now - createdAt) / (1000 * 60 * 60));
       const days = Math.floor(diffHours / 24);
@@ -159,18 +176,27 @@ async function fetchPastComplaints() {
       if (c.actions && c.actions.length > 0) {
         const last = c.actions[c.actions.length - 1];
         lastAction = last.action;
-        lastActionTime = new Date(last.timestamp).toLocaleDateString();
+        lastActionTime = last.timestamp ? new Date(last.timestamp).toLocaleDateString() : "";
       }
 
       const card = document.createElement("div");
-      card.className =
-        "bg-[#1b1b25] p-4 rounded-2xl border border-white/10 shadow-md mb-4";
+      card.className = "bg-[#1b1b25] p-4 rounded-2xl border border-white/10 shadow-md mb-4";
+      
+      // FIXED: Image URL uses API_BASE
+      const imageHtml = c.imagePath ? `
+        <img 
+          src="${API_BASE}/${c.imagePath}" 
+          class="mt-2 w-full h-32 object-cover rounded-lg"
+          onerror="this.style.display='none'"
+        />
+      ` : "";
+      
       card.innerHTML = `
         <div class="flex justify-between items-start">
           <h3 class="text-lg font-semibold text-violet-300">
-            ${c.description.substring(0, 40)}${c.description.length > 40 ? "..." : ""}
+            ${c.description ? c.description.substring(0, 40) + (c.description.length > 40 ? "..." : "") : "No description"}
           </h3>
-          <span class="status-badge ${c.status}">${c.status}</span>
+          <span class="status-badge ${c.status || 'new'}">${c.status || 'new'}</span>
         </div>
         
         <div class="mt-2 space-y-1">
@@ -180,14 +206,7 @@ async function fetchPastComplaints() {
           <p class="text-gray-400"><b>Last update:</b> ${lastActionTime || createdAt.toLocaleDateString()}</p>
         </div>
         
-        ${
-          c.imagePath
-            ? `<img 
-                src="http://localhost:3000/${c.imagePath}" 
-                class="mt-2 w-full h-32 object-cover rounded-lg"
-              />`
-            : ""
-        }
+        ${imageHtml}
         
         <div class="mt-3">
           <p class="text-gray-500 text-sm"><b>Latest update:</b> ${lastAction}</p>
@@ -198,7 +217,9 @@ async function fetchPastComplaints() {
   } catch (err) {
     console.error("Failed to fetch complaints", err);
     const container = document.getElementById("pastComplaints");
-    container.innerHTML = `<p class="text-red-500 col-span-full text-center">Failed to load complaints</p>`;
+    if (container) {
+      container.innerHTML = `<p class="text-red-500 col-span-full text-center">Failed to load complaints</p>`;
+    }
   }
 }
 
@@ -213,92 +234,7 @@ function getSimpleStatusText(status) {
   return statusMap[status] || status;
 }
 
-// ===== INITIAL FETCH =====
-fetchPastComplaints();
-
 // ===== BOT FUNCTIONALITY =====
-async function sendBotMessage() {
-  const input = document.getElementById("botInput");
-  const messages = document.getElementById("botMessages");
-
-  const text = input.value.trim();
-  if (!text) return;
-
-  // User message
-  messages.innerHTML += `
-    <div class="mb-2 text-right text-violet-300">
-      ${text}
-    </div>
-  `;
-  input.value = "";
-  messages.scrollTop = messages.scrollHeight;
-
-  // Typing indicator
-  const typingDiv = document.createElement("div");
-  typingDiv.className = "typing";
-  typingDiv.innerHTML = `<span></span><span></span><span></span>`;
-  messages.appendChild(typingDiv);
-  messages.scrollTop = messages.scrollHeight;
-
-  try {
-    const res = await fetch("http://localhost:3000/bot-query", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text })
-    });
-
-    const data = await res.json();
-
-    // Remove typing animation
-    typingDiv.remove();
-
-    // Typewriter effect
-    const botMsg = document.createElement("div");
-    botMsg.className = "mb-2 text-gray-300";
-    messages.appendChild(botMsg);
-
-    let i = 0;
-    const reply = data.reply;
-
-    const typer = setInterval(() => {
-      botMsg.textContent += reply.charAt(i);
-      i++;
-      messages.scrollTop = messages.scrollHeight;
-
-      if (i >= reply.length) {
-        clearInterval(typer);
-      }
-    }, 20);
-
-  } catch (err) {
-    typingDiv.remove();
-    messages.innerHTML += `
-      <div class="mb-2 text-red-400">
-        Something went wrong. Please try again.
-      </div>
-    `;
-  }
-}
-
-// ===== ADD SIMPLE CSS =====
-const style = document.createElement('style');
-style.textContent = `
-  .status-badge {
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-  .status-badge.new { background: #ff9800; color: #000; }
-  .status-badge.classified { background: #2196f3; color: white; }
-  .status-badge.under_action { background: #9c27b0; color: white; }
-  .status-badge.resolved { background: #4caf50; color: white; }
-`;
-document.head.appendChild(style);
-
-// Add this function to your existing index.js
-
 async function handleBotMessage(text) {
   const user = JSON.parse(localStorage.getItem("user"));
   
@@ -326,7 +262,7 @@ async function handleBotMessage(text) {
 
 async function checkComplaintStatus(userId, message) {
   try {
-    const res = await fetch("http://localhost:3000/bot-check-status", {
+    const res = await fetch(`${API_BASE}/bot-check-status`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ userId, message })
@@ -343,7 +279,7 @@ async function checkComplaintStatus(userId, message) {
 
 async function fetchRegularBotResponse(text) {
   try {
-    const res = await fetch("http://localhost:3000/bot-query", {
+    const res = await fetch(`${API_BASE}/bot-query`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text })
@@ -362,6 +298,8 @@ async function fetchRegularBotResponse(text) {
 async function sendBotMessage() {
   const input = document.getElementById("botInput");
   const messages = document.getElementById("botMessages");
+
+  if (!input || !messages) return;
 
   const text = input.value.trim();
   if (!text) return;
@@ -394,14 +332,14 @@ async function sendBotMessage() {
     messages.appendChild(botMsg);
 
     let i = 0;
-    const reply = data.reply;
+    const reply = data.reply || "I couldn't process your request.";
 
     const typer = setInterval(() => {
-      botMsg.textContent += reply.charAt(i);
-      i++;
-      messages.scrollTop = messages.scrollHeight;
-
-      if (i >= reply.length) {
+      if (i < reply.length) {
+        botMsg.textContent += reply.charAt(i);
+        i++;
+        messages.scrollTop = messages.scrollHeight;
+      } else {
         clearInterval(typer);
       }
     }, 20);
@@ -413,6 +351,7 @@ async function sendBotMessage() {
         Something went wrong. Please try again.
       </div>
     `;
+    messages.scrollTop = messages.scrollHeight;
   }
 }
 
@@ -424,7 +363,6 @@ function toggleBot() {
 
   if (!botBox.classList.contains("active")) {
     botBox.classList.add("active");
-
     botToggle.style.transition = "transform 0.2s ease";
     botToggle.style.transform = "scale(0)";
 
@@ -434,7 +372,6 @@ function toggleBot() {
 
   } else {
     botBox.classList.remove("active");
-
     botToggle.style.display = "flex";
     botToggle.style.transition = "transform 0.2s ease";
 
@@ -444,3 +381,57 @@ function toggleBot() {
   }
 }
 
+// ===== ADD SIMPLE CSS =====
+const style = document.createElement('style');
+style.textContent = `
+  .status-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .status-badge.new { background: #ff9800; color: #000; }
+  .status-badge.classified { background: #2196f3; color: white; }
+  .status-badge.under_action { background: #9c27b0; color: white; }
+  .status-badge.resolved { background: #4caf50; color: white; }
+  
+  .typing {
+    display: inline-block;
+    padding: 10px;
+  }
+  .typing span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #9ca3af;
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: typing 1s infinite ease-in-out;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+`;
+document.head.appendChild(style);
+
+// ===== ENTER KEY FOR BOT =====
+document.getElementById("botInput")?.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") {
+    sendBotMessage();
+  }
+});
+
+// ===== INITIAL FETCH =====
+if (user) {
+  fetchPastComplaints();
+  
+  // Set initial location
+  setTimeout(() => {
+    document.getElementById("lat").value = areaCoords.Golghar[0];
+    document.getElementById("lng").value = areaCoords.Golghar[1];
+  }, 100);
+}
