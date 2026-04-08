@@ -1,0 +1,62 @@
+KEYWORDS = {
+    "Water": [
+        "water", "supply", "no water", "pipeline", "pipe",
+        "tap", "pressure", "tank", "leak", "leakage",
+        "dirty water", "drinking water", "water shortage","manhole","open manhole"
+    ],
+    "Electricity": [
+        "electric", "electricity", "power", "current",
+        "light", "lights", "streetlight",
+        "wire", "spark", "shock",
+        "transformer", "pole", "meter",
+        "voltage", "power cut", "short circuit"
+    ],
+    "Municipality": [
+        "garbage", "waste", "dump", "dumping",
+        "drain", "drains", "sewer", "sewage",
+        "dirty", "smell", "mosquito",
+        "sanitation", "toilet", "dustbin"
+    ],
+    "PWD": [
+        "road", "roads", "pothole", "potholes",
+        "bridge", "flyover", "highway",
+        "footpath", "divider", "culvert",
+        "crack", "collapse", "asphalt",
+        "construction", "speed breaker"
+    ],
+    "Police": [
+        "theft", "stolen", "robbery",
+        "fight", "fighting", "quarrel",
+        "harass", "harassment", "eve teasing",
+        "crime", "criminal", "threat",
+        "drunk", "alcohol", "drug",
+        "noise", "loud", "disturbance",
+        "security", "unsafe"
+    ],
+    "Traffic": [
+        "traffic", "signal", "signals",
+        "parking", "jam", "congestion",
+        "junction", "crossing",
+        "wrong side", "accident",
+        "rash driving", "speeding",
+        "bus stop", "lane"
+    ]
+}
+
+PRIORITY_KEYWORDS = {
+    "High": [
+        "live wire", "electric shock", "fire","big jam",
+        "collapse", "fallen", "burst",
+        "open manhole", "accident", "danger",
+        "emergency", "attack", "fight", "theft"
+    ],
+    "Medium": [
+        "not working", "damaged", "leak",
+        "overflow", "blocked", "frequent",
+        "low pressure", "delay"
+    ],
+    "Low": [
+        "dirty", "dust", "small", "minor",
+        "slow", "dim", "maintenance"
+    ]
+}
