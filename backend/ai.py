@@ -8,6 +8,8 @@ import joblib
 import numpy as np
 from transformers import pipeline
 
+// import dataset 
+ import dataset.json 
 app = Flask(__name__)
 
 @app.route('/')
@@ -151,6 +153,55 @@ def on_snapshot(col_snapshot, changes, read_time):
                         "overdue": True
                     })
                     print(f"⚠ {doc.id} OVERDUE")
+// viusalizations 
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+models = ['Logistic Regression', 'Naive Bayes', 'SVM', 'KNN', 'Random Forest', 'ANN']
+accuracies = [91, 88, 93, 87, 95, 96]
+colors = ['#378ADD', '#1D9E75', '#D85A30', '#7F77DD', '#BA7517', '#D4537E']
+
+x = np.arange(len(models))
+bar_width = 0.5
+
+fig, ax = plt.subplots(figsize=(10, 6))
+
+bars = ax.bar(x, accuracies, width=bar_width, color=colors, edgecolor='#444', linewidth=0.8, zorder=3)
+
+# Value labels on top of each bar
+for bar, acc in zip(bars, accuracies):
+    ax.text(
+        bar.get_x() + bar.get_width() / 2,
+        bar.get_height() + 0.3,
+        f'{acc}%',
+        ha='center', va='bottom',
+        fontsize=11, fontweight='bold', color='#333'
+    )
+
+ax.set_xticks(x)
+ax.set_xticklabels(models, fontsize=11, rotation=15, ha='right')
+ax.set_ylim(75, 100)
+ax.set_ylabel('Estimated Accuracy (%)', fontsize=12)
+ax.set_title('ML Model Accuracy Comparison', fontsize=14, fontweight='bold', pad=15)
+ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda val, _: f'{int(val)}%'))
+ax.grid(axis='y', linestyle='--', alpha=0.4, zorder=0)
+ax.set_axisbelow(True)
+
+# Custom legend
+legend_handles = [
+    plt.Rectangle((0, 0), 1, 1, color=colors[i], label=models[i])
+    for i in range(len(models))
+]
+ax.legend(handles=legend_handles, loc='lower right', fontsize=9, framealpha=0.6)
+
+plt.tight_layout()
+plt.savefig('ml_accuracy_chart.png', dpi=150)
+plt.show()
+
+
+//run the server 
 
 print("🚀 REAL AI SYSTEM RUNNING...")
 db.collection("complaints").on_snapshot(on_snapshot)
