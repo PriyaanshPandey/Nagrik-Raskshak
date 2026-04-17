@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import dataset..json from backend
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 np.random.seed(42)
 X = np.random.rand(100, 5)
